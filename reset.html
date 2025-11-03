@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Сброс пароля</title>
+  <style>
+    :root {
+      --primary: #8FA68E; /* AppTheme.primaryColor */
+      --bg: #F5F3F0;      /* AppTheme.backgroundColor */
+      --accent: #D4A5A5;  /* AppTheme.accentColor */
+      --text: #2D5A3D;    /* AppTheme.textColor */
+      --surface: #FFFFFF; /* AppTheme.surfaceColor */
+      --divider: #E6E2DC; /* AppTheme.dividerColor */
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    .container {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .brandTitle {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.2px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      padding: 28px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+      color: var(--text);
+      letter-spacing: 0.2px;
+    }
+    .sub {
+      font-size: 14px;
+      color: #496E56; /* AppTheme.lightTextColor */
+      margin: 0 0 16px 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--divider);
+      border-radius: 20px;
+      outline: none;
+      background: #fff;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    input[type="password"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(143,166,142,0.25);
+    }
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    button {
+      appearance: none;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 999px; /* Stadium */
+      font-weight: 700;
+      letter-spacing: .2px;
+      cursor: pointer;
+      transition: transform .04s ease, filter .15s ease, opacity .2s ease;
+      min-height: 44px;
+    }
+    button:hover { filter: brightness(0.98); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .msg { font-size: 14px; }
+    .msg.ok { color: var(--text); }
+    .msg.err { color: #B00020; }
+    .footer {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 12px;
+      color: #496E56;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brandTitle">MogiClub</div>
+    <div class="card">
+      <div class="brand">
+        <h1>Сброс пароля</h1>
+      </div>
+      <p class="sub">Введите новый пароль, чтобы защитить свой аккаунт.</p>
+
+      <label for="password">Новый пароль</label>
+      <input type="password" id="password" placeholder="Введите новый пароль" autocomplete="new-password" />
+
+      <div class="actions">
+        <button id="resetBtn">Сбросить пароль</button>
+        <span id="message" class="msg" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  // --- Replace with your own values ---
+  const SUPABASE_URL = "https://pnlzntabncofkvjipmsh.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBubHpudGFibmNvZmt2amlwbXNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMTkwOTAsImV4cCI6MjA3MTg5NTA5MH0.JA9P4XGo96Onmct40_YIbonxyRHiTI_XaoakZbns5o8";
+  // -------------------------------------
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const btn = document.getElementById("resetBtn");
+  const pwd = document.getElementById("password");
+  const msg = document.getElementById("message");
+
+  function setMessage(text, ok = false) {
+    msg.textContent = text;
+    msg.className = "msg " + (ok ? "ok" : "err");
+  }
+
+  btn.addEventListener("click", async () => {
+    const password = pwd.value.trim();
+    if (!password) {
+      setMessage("Пожалуйста, введите новый пароль.");
+      pwd.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = "Сбрасываем…";
+    setMessage("");
+
+    try {
+      // This updates the currently authenticated user
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) {
+        setMessage(error.message);
+        btn.textContent = prev;
+        btn.disabled = false;
+      } else {
+        setMessage("Пароль успешно изменён!", true);
+        btn.textContent = "Готово";
+      }
+    } catch (e) {
+      setMessage("Ошибка сети. Попробуйте ещё раз.");
+      btn.textContent = prev;
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
