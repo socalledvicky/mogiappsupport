@@ -37,7 +37,7 @@
       color: var(--text);
       letter-spacing: 0.2px;
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 16px;
     }
     .card {
       width: 100%;
@@ -152,6 +152,24 @@
   const btn = document.getElementById("resetBtn");
   const pwd = document.getElementById("password");
   const msg = document.getElementById("message");
+
+async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const token_hash = params.get('token_hash');
+    const type = params.get('type');
+      const { data, error } = await supabase.auth.verifyOtp({
+        type,
+        token_hash,
+      })
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      console.log('Please enter your new password.');
+    }
+
+init();
 
   function setMessage(text, ok = false) {
     msg.textContent = text;
