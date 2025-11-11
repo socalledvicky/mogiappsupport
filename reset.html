@@ -153,56 +153,33 @@
   const pwd = document.getElementById("password");
   const msg = document.getElementById("message");
 
+async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const token_hash = params.get('token_hash');
+    const type = params.get('type');
+      const { data, error } = await supabase.auth.verifyOtp({
+        type,
+        token_hash,
+      })
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      console.log('Please enter your new password.');
+    }
+
+init();
+
   function setMessage(text, ok = false) {
     msg.textContent = text;
     msg.className = "msg " + (ok ? "ok" : "err");
   }
 
-  // Initialize: Check for auth session from URL
-  async function init() {
-    // Check if there's a hash in the URL (contains the reset token)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
-
-    if (type === 'recovery' && accessToken) {
-      // Exchange the token for a session
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: hashParams.get('refresh_token') || ''
-      });
-
-      if (error) {
-        setMessage('Недействительная или истекшая ссылка для сброса');
-        btn.disabled = true;
-        return;
-      }
-
-      // Session established, user can now reset password
-      setMessage('Введите новый пароль', true);
-    } else {
-      // No token in URL
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setMessage('Недействительная ссылка. Запросите новую ссылку для сброса пароля');
-        btn.disabled = true;
-      }
-    }
-  }
-
-  // Call init on page load
-  init();
-
   btn.addEventListener("click", async () => {
     const password = pwd.value.trim();
     if (!password) {
       setMessage("Пожалуйста, введите новый пароль.");
-      pwd.focus();
-      return;
-    }
-
-    if (password.length < 6) {
-      setMessage("Пароль должен содержать минимум 6 символов.");
       pwd.focus();
       return;
     }
@@ -223,11 +200,6 @@
       } else {
         setMessage("Пароль успешно изменён!", true);
         btn.textContent = "Готово";
-        // Sign out after password reset
-        setTimeout(() => {
-          supabase.auth.signOut();
-          setMessage("Войдите с новым паролем", true);
-        }, 2000);
       }
     } catch (e) {
       setMessage("Ошибка сети. Попробуйте ещё раз.");
